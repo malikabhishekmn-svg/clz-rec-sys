@@ -3,7 +3,7 @@ import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBniobe4lOFy-2JXaEOQ6-C4074GJ1DK2g",
+  apiKey: "AIzaSyBniobe4lOFy-2JXaEOQ6-C4O74GJ1DK2g",
   authDomain: "clzrecsystem.firebaseapp.com",
   projectId: "clzrecsystem",
   storageBucket: "clzrecsystem.firebasestorage.app",
