@@ -12,11 +12,9 @@ const firebaseConfig = {
   measurementId: "G-D9G1J13VCQ"
 };
 
-// Main App Instance
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
-// Secondary App Instance (Admin logout නොවී Student accounts හදන්න)
 export const secondaryApp = initializeApp(firebaseConfig, "Secondary");
 export const secondaryAuth = getAuth(secondaryApp);
