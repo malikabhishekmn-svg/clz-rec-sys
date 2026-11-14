@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Portal - Clz Recordings</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #090d16; color: #f8fafc; margin: 0; padding: 20px; user-select: none; }
+    .box { max-width: 400px; margin: 60px auto; background: #1e293b; padding: 25px; border-radius: 12px; }
+    .dashboard { max-width: 950px; margin: auto; display: none; }
+    input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; }
+    button { background: #2563eb; border: none; font-weight: bold; cursor: pointer; }
+    .rec-card { background: #1e293b; padding: 15px; border-radius: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+    
+    /* Protected Video Player Container */
+    .player-wrapper { position: relative; width: 100%; padding-bottom: 56.25%; background: #000; border-radius: 10px; overflow: hidden; margin-top: 20px; display: none; }
+    .player-wrapper iframe { position: absolute; top: -60px; left: 0; width: 100%; height: calc(100% + 120px); pointer-events: none; }
+    
+    /* Transparent Anti-Share Shield + Custom Controls */
+    .shield { position: absolute; inset: 0; z-index: 10; background: transparent; }
+    .controls { position: absolute; bottom: 0; left: 0; right: 0; z-index: 20; background: rgba(0,0,0,0.8); padding: 10px; display: flex; gap: 10px; align-items: center; }
+    .controls button { width: auto; padding: 6px 14px; margin: 0; font-size: 13px; }
+    
+    /* Dynamic Floating Watermark */
+    .watermark { position: absolute; z-index: 15; color: rgba(255, 255, 255, 0.35); font-size: 14px; font-weight: bold; pointer-events: none; transition: all 2s ease-in-out; text-shadow: 1px 1px 2px black; }
+  </style>
+</head>
+<body oncontextmenu="return false;">
+
+  <!-- Login Box -->
+  <div id="loginBox" class="box">
+    <h2>🎓 Student Login</h2>
+    <input type="email" id="email" placeholder="Enter your Gmail">
+    <input type="password" id="password" placeholder="Enter Password">
+    <button onclick="login()">Login</button>
+    <p style="font-size: 12px; color: #94a3b8;">Password අමතක නම් Admin සම්බන්ධ කරගන්න.</p>
+  </div>
+
+  <!-- Force Password Change Box -->
+  <div id="changePassBox" class="box" style="display:none;">
+    <h2>🔐 Change Temporary Password</h2>
+    <p style="font-size: 13px; color: #cbd5e1;">ආරක්ෂාව සඳහා කරුණාකර අලුත් Password එකක් ලබා දෙන්න.</p>
+    <input type="password" id="newPass" placeholder="New Password (Min 6 chars)">
+    <button onclick="updateFirstPassword()">Save New Password</button>
+  </div>
+
+  <!-- Student Dashboard -->
+  <div id="dashboard" class="dashboard">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <h2 id="welcomeText" style="margin:0;">Welcome</h2>
+        <span id="studentMeta" style="color:#38bdf8; font-size:14px;"></span>
+      </div>
+      <button onclick="logout()" style="width:auto; background:#dc2626;">Logout</button>
+    </div>
+
+    <!-- Protected Video Player -->
+    <div id="playerWrapper" class="player-wrapper">
+      <div id="ytPlayer"></div>
+      <div class="shield"></div>
+      <div id="watermark" class="watermark">ID: LOADING</div>
+      <div class="controls">
+        <button onclick="playVid()">▶ Play</button>
+        <button onclick="pauseVid()">⏸ Pause</button>
+        <button onclick="seek(-10)">⏪ -10s</button>
+        <button onclick="seek(10)">⏩ +10s</button>
+        <button onclick="toggleFull()">⛶ Fullscreen</button>
+      </div>
+    </div>
+
+    <h3>📚 Your Available Recordings</h3>
+    <div id="recList">Loading recordings...</div>
+  </div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script type="module">
+  import { auth, db } from './firebase-config.js';
+  import { signInWithEmailAndPassword, updatePassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { doc, getDoc, updateDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  let currentStudent = null;
+  let player = null;
+
+  window.login = async () => {
+    const email = document.getElementById('email').value.trim();
+    const pass = document.getElementById('password').value;
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+    } catch (e) {
+      alert("Login Failed: Email හෝ Password වැරදියි!");
+    }
+  };
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      document.getElementById('loginBox').style.display = 'block';
+      document.getElementById('dashboard').style.display = 'none';
+      return;
+    }
+
+    const snap = await getDoc(doc(db, "students", user.uid));
+    if (!snap.exists()) return alert("Student record not found!");
+    currentStudent = { uid: user.uid, ...snap.data() };
+
+    document.getElementById('loginBox').style.display = 'none';
+
+    if (currentStudent.mustChangePass) {
+      document.getElementById('changePassBox').style.display = 'block';
+    } else {
+      showDashboard();
+    }
+  });
+
+  window.updateFirstPassword = async () => {
+    const newPass = document.getElementById('newPass').value;
+    if (newPass.length < 6) return alert("Password එක අකුරු 6කට වඩා වැඩි විය යුතුයි!");
+    try {
+      await updatePassword(auth.currentUser, newPass);
+      await updateDoc(doc(db, "students", currentStudent.uid), { mustChangePass: false });
+      document.getElementById('changePassBox').style.display = 'none';
+      showDashboard();
+    } catch (e) {
+      alert("Error: " + e.message);
+    }
+  };
+
+  async function showDashboard() {
+    document.getElementById('dashboard').style.display = 'block';
+    document.getElementById('welcomeText').innerText = `👋 ${currentStudent.name}`;
+    document.getElementById('studentMeta').innerText = `Clz ID: ${currentStudent.clzId} | Class: ${currentStudent.class}`;
+
+    const q = query(collection(db, "recordings"), where("class", "==", currentStudent.class));
+    const snap = await getDocs(q);
+    const list = document.getElementById('recList');
+    list.innerHTML = "";
+
+    let count = 0;
+    snap.forEach(d => {
+      const rec = d.data();
+      if (rec.allowedIds && rec.allowedIds.includes(currentStudent.clzId)) {
+        count++;
+        list.innerHTML += `
+          <div class="rec-card">
+            <div>
+              <strong>${rec.title}</strong><br>
+              <small style="color:#94a3b8;">Class: ${rec.class}</small>
+            </div>
+            <button onclick="watchVideo('${rec.videoId}')" style="width:auto;">▶ Watch Now</button>
+          </div>`;
+      }
+    });
+
+    if (count === 0) list.innerHTML = "<p>ඔබගේ Clz ID එකට දැනට recordings කිසිවක් ලබා දී නොමැත.</p>";
+  }
+
+  window.watchVideo = (videoId) => {
+    document.getElementById('playerWrapper').style.display = 'block';
+    const wm = document.getElementById('watermark');
+    wm.innerText = `${currentStudent.clzId} | ${currentStudent.name}`;
+
+    // Move Watermark every 4 seconds
+    setInterval(() => {
+      const top = Math.floor(Math.random() * 75) + 10;
+      const left = Math.floor(Math.random() * 70) + 10;
+      wm.style.top = top + "%";
+      wm.style.left = left + "%";
+    }, 4000);
+
+    if (player) {
+      player.loadVideoById(videoId);
+    } else {
+      player = new YT.Player('ytPlayer', {
+        videoId: videoId,
+        playerVars: { 'controls': 0, 'rel': 0, 'modestbranding': 1, 'disablekb': 1 }
+      });
+    }
+  };
+
+  window.playVid = () => player && player.playVideo();
+  window.pauseVid = () => player && player.pauseVideo();
+  window.seek = (sec) => player && player.seekTo(player.getCurrentTime() + sec, true);
+  window.toggleFull = () => {
+    const el = document.getElementById('playerWrapper');
+    if (!document.fullscreenElement) el.requestFullscreen();
+    else document.exitFullscreen();
+  };
+  window.logout = () => signOut(auth);
+</script>
+</body>
+</html>

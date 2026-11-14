@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel - Clz Recordings</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
+    .container { max-width: 900px; margin: auto; }
+    .card { background: #1e293b; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #334155; }
+    h2 { margin-top: 0; color: #38bdf8; }
+    input, select, textarea, button { width: 100%; padding: 10px; margin: 8px 0; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: white; box-sizing: border-box; }
+    button { background: #0284c7; border: none; font-weight: bold; cursor: pointer; }
+    button:hover { background: #0369a1; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .badge { background: #059669; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+    th, td { padding: 10px; border-bottom: 1px solid #334155; text-align: left; }
+    .copy-box { background: #064e3b; padding: 12px; border-radius: 6px; margin-top: 10px; display: none; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🛡️ Admin Control Panel</h1>
+
+  <!-- 1. Create Student Account -->
+  <div class="card">
+    <h2>1. Register New Student</h2>
+    <div class="grid">
+      <input type="text" id="stName" placeholder="Student Full Name">
+      <input type="text" id="stClzId" placeholder="Clz ID (Ex: GG-101)">
+      <input type="email" id="stEmail" placeholder="Student Gmail">
+      <input type="text" id="stWhatsapp" placeholder="WhatsApp No (Ex: 0771234567)">
+      <select id="stClass">
+        <option value="Golden Gate">Golden Gate</option>
+        <option value="Science Image">Science Image</option>
+        <option value="Commerce Class">Commerce Class</option>
+      </select>
+      <input type="text" id="stTempPass" placeholder="Temporary Password" readonly>
+    </div>
+    <button onclick="generatePass()" style="background:#475569;">🔄 Generate Random Temp Password</button>
+    <button onclick="createStudent()">✅ Create Student Account</button>
+
+    <div id="credentialsBox" class="copy-box">
+      <strong>Account Created! Send this to student via WhatsApp:</strong>
+      <p id="credText" style="white-space: pre-line;"></p>
+    </div>
+  </div>
+
+  <!-- 2. Forget Password Reset -->
+  <div class="card">
+    <h2>2. Student Forget Password Reset</h2>
+    <div class="grid">
+      <input type="email" id="resetEmail" placeholder="Enter Student Gmail to Send Reset Link">
+      <button onclick="sendResetLink()">📧 Send Password Reset Email</button>
+    </div>
+  </div>
+
+  <!-- 3. Add Recording & Assign Clz IDs -->
+  <div class="card">
+    <h2>3. Add Recording & Control ID Access</h2>
+    <input type="text" id="vidTitle" placeholder="Lesson Title (Ex: Accounting - Lesson 01)">
+    <div class="grid">
+      <select id="vidClass">
+        <option value="Golden Gate">Golden Gate</option>
+        <option value="Science Image">Science Image</option>
+        <option value="Commerce Class">Commerce Class</option>
+      </select>
+      <input type="text" id="vidUrl" placeholder="YouTube Unlisted Video ID (Ex: dQw4w9WgXcQ)">
+    </div>
+    <textarea id="allowedIds" rows="3" placeholder="Allowed Clz IDs separated by comma (Ex: GG-101, GG-102, GG-105)"></textarea>
+    <button onclick="addRecording()">🎬 Publish Recording</button>
+  </div>
+
+  <!-- 4. Manage Recordings Access -->
+  <div class="card">
+    <h2>4. Active Recordings & Allowed IDs</h2>
+    <table id="recTable">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Class</th>
+          <th>Allowed Clz IDs</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<script type="module">
+  import { auth, db, secondaryAuth } from './firebase-config.js';
+  import { createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { doc, setDoc, collection, addDoc, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  window.generatePass = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789@#";
+    let pass = "";
+    for (let i = 0; i < 8; i++) pass += chars.charAt(Math.floor(Math.random() * chars.length));
+    document.getElementById('stTempPass').value = pass;
+  };
+  generatePass();
+
+  window.createStudent = async () => {
+    const name = document.getElementById('stName').value.trim();
+    const clzId = document.getElementById('stClzId').value.trim().toUpperCase();
+    const email = document.getElementById('stEmail').value.trim();
+    const whatsapp = document.getElementById('stWhatsapp').value.trim();
+    const stClass = document.getElementById('stClass').value;
+    const tempPass = document.getElementById('stTempPass').value;
+
+    if (!name || !clzId || !email || !tempPass) return alert("ඔක්කොම විස්තර පුරවන්න!");
+
+    try {
+      const userCred = await createUserWithEmailAndPassword(secondaryAuth, email, tempPass);
+      await setDoc(doc(db, "students", userCred.user.uid), {
+        name, clzId, email, whatsapp, class: stClass, mustChangePass: true
+      });
+
+      const msg = `🎓 *Clz Portal Login Details*\nName: ${name}\nClz ID: ${clzId}\nClass: ${stClass}\nLogin Link: ${window.location.origin}\nEmail: ${email}\nTemp Password: ${tempPass}\n\n*(Log වුණ ගමන් Password එක මාරු කරගන්න)*`;
+      document.getElementById('credText').innerText = msg;
+      document.getElementById('credentialsBox').style.display = 'block';
+      generatePass();
+    } catch (e) {
+      alert("Error: " + e.message);
+    }
+  };
+
+  window.sendResetLink = async () => {
+    const email = document.getElementById('resetEmail').value.trim();
+    if (!email) return alert("Gmail එක දාන්න!");
+    try {
+      await sendPasswordResetEmail(auth, email);
+      alert("Password reset link එක ළමයාගේ Gmail එකට යැව්වා!");
+    } catch (e) {
+      alert("Error: " + e.message);
+    }
+  };
+
+  window.addRecording = async () => {
+    const title = document.getElementById('vidTitle').value.trim();
+    const vidClass = document.getElementById('vidClass').value;
+    const videoId = document.getElementById('vidUrl').value.trim();
+    const idsRaw = document.getElementById('allowedIds').value;
+    const allowedIds = idsRaw.split(',').map(id => id.trim().toUpperCase()).filter(id => id);
+
+    if (!title || !videoId) return alert("Title සහ YouTube Video ID එක දාන්න!");
+
+    await addDoc(collection(db, "recordings"), {
+      title, class: vidClass, videoId, allowedIds, createdAt: new Date().toISOString()
+    });
+    alert("Recording එක add වුණා!");
+    loadRecordings();
+  };
+
+  async function loadRecordings() {
+    const snap = await getDocs(collection(db, "recordings"));
+    const tbody = document.querySelector("#recTable tbody");
+    tbody.innerHTML = "";
+    snap.forEach(d => {
+      const data = d.data();
+      tbody.innerHTML += `
+        <tr>
+          <td>${data.title}</td>
+          <td><span class="badge">${data.class}</span></td>
+          <td>${data.allowedIds.join(', ')}</td>
+          <td><button onclick="editIds('${d.id}', '${data.allowedIds.join(', ')}')" style="padding:5px; font-size:12px;">Edit IDs</button></td>
+        </tr>`;
+    });
+  }
+
+  window.editIds = async (docId, currentIds) => {
+    const newIds = prompt("Update Allowed Clz IDs (comma separated):", currentIds);
+    if (newIds !== null) {
+      const arr = newIds.split(',').map(id => id.trim().toUpperCase()).filter(id => id);
+      await updateDoc(doc(db, "recordings", docId), { allowedIds: arr });
+      loadRecordings();
+    }
+  };
+
+  loadRecordings();
+</script>
+</body>
+</html>
