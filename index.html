@@ -1,190 +1,1421 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Student Portal - Clz Recordings</title>
+  <title>ICT with Chanuka — Learning Portal</title>
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="apple-touch-icon" href="logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: system-ui, sans-serif; background: #090d16; color: #f8fafc; margin: 0; padding: 20px; user-select: none; }
-    .box { max-width: 400px; margin: 60px auto; background: #1e293b; padding: 25px; border-radius: 12px; }
-    .dashboard { max-width: 950px; margin: auto; display: none; }
-    input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; }
-    button { background: #2563eb; border: none; font-weight: bold; cursor: pointer; }
-    .rec-card { background: #1e293b; padding: 15px; border-radius: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
-    
-    /* Protected Video Player Container */
-    .player-wrapper { position: relative; width: 100%; padding-bottom: 56.25%; background: #000; border-radius: 10px; overflow: hidden; margin-top: 20px; display: none; }
-    .player-wrapper iframe { position: absolute; top: -60px; left: 0; width: 100%; height: calc(100% + 120px); pointer-events: none; }
-    
-    /* Transparent Anti-Share Shield + Custom Controls */
-    .shield { position: absolute; inset: 0; z-index: 10; background: transparent; }
-    .controls { position: absolute; bottom: 0; left: 0; right: 0; z-index: 20; background: rgba(0,0,0,0.8); padding: 10px; display: flex; gap: 10px; align-items: center; }
-    .controls button { width: auto; padding: 6px 14px; margin: 0; font-size: 13px; }
-    
-    /* Dynamic Floating Watermark */
-    .watermark { position: absolute; z-index: 15; color: rgba(255, 255, 255, 0.35); font-size: 14px; font-weight: bold; pointer-events: none; transition: all 2s ease-in-out; text-shadow: 1px 1px 2px black; }
+    :root[data-theme="dark"] {
+      --bg: #050811;
+      --bg-mesh: radial-gradient(circle at 12% 10%, rgba(59, 130, 246, 0.14), transparent 38%),
+                 radial-gradient(circle at 88% 18%, rgba(6, 182, 212, 0.12), transparent 38%),
+                 radial-gradient(circle at 50% 90%, rgba(16, 185, 129, 0.07), transparent 45%);
+      --surface: rgba(15, 23, 42, 0.72);
+      --surface-solid: #0f172a;
+      --surface-hover: rgba(30, 41, 59, 0.85);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-highlight: rgba(56, 189, 248, 0.45);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --primary-glow: rgba(59, 130, 246, 0.38);
+      --gradient: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+      --accent: #10b981;
+      --danger: #ef4444;
+      --shadow: 0 20px 45px -15px rgba(0, 0, 0, 0.7);
+      --card-shadow: 0 12px 32px -10px rgba(0, 0, 0, 0.55);
+    }
+
+    :root[data-theme="light"] {
+      --bg: #f8fafc;
+      --bg-mesh: radial-gradient(circle at 12% 10%, rgba(37, 99, 235, 0.08), transparent 38%),
+                 radial-gradient(circle at 88% 18%, rgba(6, 182, 212, 0.08), transparent 38%);
+      --surface: rgba(255, 255, 255, 0.86);
+      --surface-solid: #ffffff;
+      --surface-hover: #f1f5f9;
+      --border: rgba(15, 23, 42, 0.09);
+      --border-highlight: rgba(37, 99, 235, 0.4);
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-glow: rgba(37, 99, 235, 0.22);
+      --gradient: linear-gradient(135deg, #2563eb 0%, #0891b2 100%);
+      --accent: #059669;
+      --danger: #dc2626;
+      --shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.07);
+      --card-shadow: 0 12px 28px -8px rgba(15, 23, 42, 0.06);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background-color: var(--bg);
+      background-image: var(--bg-mesh);
+      background-attachment: fixed;
+      color: var(--text);
+      transition: background-color 0.35s ease, color 0.35s ease;
+      user-select: none;
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3, h4, .brand, .player-title {
+      font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.25); border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+    /* Full-Screen ICT Preloader */
+    #ictPreloader {
+      position: fixed; inset: 0; z-index: 9999;
+      background: radial-gradient(circle at center, #0f172a 0%, #03060c 100%);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.5s ease;
+    }
+    #ictPreloader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .ict-core {
+      position: relative; width: 96px; height: 96px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 22px;
+      filter: drop-shadow(0 0 24px rgba(59, 130, 246, 0.35));
+    }
+    .ict-ring-outer {
+      position: absolute; inset: 0; border-radius: 50%;
+      border: 3px solid rgba(59, 130, 246, 0.12);
+      border-top-color: #3b82f6; border-right-color: #06b6d4;
+      animation: spin 1s cubic-bezier(0.55, 0.15, 0.45, 0.85) infinite;
+    }
+    .ict-ring-inner {
+      position: absolute; inset: 14px; border-radius: 50%;
+      border: 2px dashed rgba(16, 185, 129, 0.65);
+      animation: spinReverse 2.2s linear infinite;
+    }
+    .ict-binary-tag {
+      font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700;
+      color: #38bdf8; letter-spacing: 1.5px;
+      text-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+    }
+    .ict-load-title {
+      font-size: 19px; font-weight: 800; color: #f8fafc; letter-spacing: -0.3px;
+    }
+    .ict-load-sub {
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      color: #10b981; margin-top: 6px; letter-spacing: 2px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes spinReverse { to { transform: rotate(-360deg); } }
+
+    /* Glassmorphic Navbar */
+    .navbar {
+      position: sticky; top: 0; z-index: 40;
+      background: var(--surface);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 28px;
+      display: flex; justify-content: space-between; align-items: center;
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.12);
+    }
+    .brand {
+      display: flex; align-items: center; gap: 12px;
+      font-weight: 800; font-size: 19px; letter-spacing: -0.4px;
+    }
+    .brand span {
+      background: linear-gradient(135deg, var(--text) 30%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .brand-logo {
+      height: 40px; width: 40px; border-radius: 12px; object-fit: cover;
+      border: 1px solid var(--border-highlight);
+      box-shadow: 0 0 16px var(--primary-glow);
+    }
+    .nav-actions { display: flex; align-items: center; gap: 12px; }
+
+    .icon-btn {
+      background: var(--surface-solid); border: 1px solid var(--border); color: var(--text);
+      width: 42px; height: 42px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; padding: 0;
+    }
+    .icon-btn:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px var(--primary-glow);
+      color: var(--primary);
+    }
+    .icon-btn img { width: 100%; height: 100%; object-fit: cover; }
+
+    .container { max-width: 1180px; width: 100%; margin: 0 auto; padding: 28px 20px; flex: 1; }
+
+    /* Premium Hero Banner */
+    .hero {
+      position: relative;
+      overflow: hidden;
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 32px 34px;
+      margin-bottom: 28px;
+      display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 24px;
+      box-shadow: var(--shadow);
+    }
+    .hero::before {
+      content: "";
+      position: absolute; top: -50%; right: -10%;
+      width: 340px; height: 340px; border-radius: 50%;
+      background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-left { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; position: relative; z-index: 1; }
+    .hero-avatar {
+      width: 78px; height: 78px; border-radius: 22px;
+      object-fit: cover; border: 2px solid var(--primary);
+      background: var(--surface-solid); display: flex; align-items: center; justify-content: center;
+      overflow: hidden; flex-shrink: 0;
+      box-shadow: 0 10px 25px var(--primary-glow);
+      transition: transform 0.3s ease;
+    }
+    .hero:hover .hero-avatar { transform: scale(1.03) rotate(-2deg); }
+    .hero-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .hero h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.6px; margin-bottom: 4px; }
+    .hero p { color: var(--text-muted); font-size: 14.5px; max-width: 560px; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: rgba(59, 130, 246, 0.14);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: #38bdf8;
+      padding: 5px 14px; border-radius: 99px; font-size: 12px; font-weight: 700;
+      margin-bottom: 10px; letter-spacing: 0.2px;
+    }
+    :root[data-theme="light"] .badge { color: var(--primary); }
+
+    /* Blocked Alert Banner */
+    .blocked-banner {
+      background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #fca5a5; padding: 22px; border-radius: 18px; text-align: center;
+      font-size: 14.5px; grid-column: 1 / -1;
+      backdrop-filter: blur(12px);
+    }
+    :root[data-theme="light"] .blocked-banner { color: #b91c1c; }
+
+    /* Modern Pill Navigation Tabs */
+    .tabs-bar {
+      display: inline-flex; gap: 8px; margin-bottom: 22px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 6px; border-radius: 16px;
+      backdrop-filter: blur(14px);
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      background: transparent; border: 1px solid transparent; color: var(--text-muted);
+      padding: 10px 22px; border-radius: 12px; font-size: 14px; font-weight: 600;
+      cursor: pointer; display: inline-flex; align-items: center; gap: 9px;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .tab-btn:hover { color: var(--text); background: rgba(148, 163, 184, 0.08); }
+    .tab-btn.active {
+      background: var(--gradient);
+      color: #ffffff;
+      box-shadow: 0 6px 20px var(--primary-glow);
+    }
+
+    /* Search & Date Filter Bar */
+    .filter-bar {
+      display: grid; grid-template-columns: 2fr 1fr auto; gap: 12px;
+      margin-bottom: 28px; background: var(--surface); padding: 14px;
+      border-radius: 18px; border: 1px solid var(--border);
+      backdrop-filter: blur(16px);
+      box-shadow: var(--card-shadow);
+    }
+    @media (max-width: 650px) {
+      .filter-bar { grid-template-columns: 1fr; }
+      .tabs-bar { display: flex; width: 100%; }
+      .tab-btn { flex: 1; justify-content: center; }
+    }
+    .filter-bar input {
+      width: 100%; padding: 12px 16px; border-radius: 12px;
+      border: 1px solid var(--border); background: var(--surface-solid); color: var(--text);
+      font-size: 14px; outline: none; transition: all 0.2s ease;
+    }
+    .filter-bar input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+
+    /* YouTube-Style Cinema Video Player */
+    .player-section {
+      display: none; margin-bottom: 34px;
+      background: var(--surface); border: 1px solid var(--border-highlight);
+      border-radius: 24px; padding: 22px;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.75), 0 0 35px var(--primary-glow);
+      animation: fadeSlideUp 0.35s ease-out;
+    }
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .player-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 16px; padding: 0 4px; gap: 12px;
+    }
+    .player-title { font-weight: 800; font-size: 20px; letter-spacing: -0.3px; }
+    .close-player {
+      background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171;
+      padding: 8px 16px; border-radius: 10px; font-size: 12.5px; font-weight: 700;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .close-player:hover { background: var(--danger); border-color: var(--danger); color: #fff; }
+
+    .player-wrapper {
+      position: relative; width: 100%; padding-bottom: 56.25%;
+      background: #000; border-radius: 16px; overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6);
+    }
+    .player-wrapper iframe {
+      position: absolute; top: -60px; left: 0;
+      width: 100%; height: calc(100% + 120px);
+      border: none; pointer-events: none;
+    }
+    .shield { position: absolute; inset: 0; z-index: 10; background: transparent; cursor: pointer; }
+    .watermark {
+      position: absolute; z-index: 15;
+      color: rgba(255, 255, 255, 0.42);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12.5px; font-weight: 700; letter-spacing: 0.8px;
+      pointer-events: none; transition: all 2s ease-in-out;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.95);
+      background: rgba(0, 0, 0, 0.25);
+      padding: 3px 8px; border-radius: 6px;
+    }
+
+    /* Auto-Hiding Bottom Controls + Timeline */
+    .controls-overlay {
+      position: absolute; bottom: 0; left: 0; right: 0; z-index: 25;
+      background: linear-gradient(to top, rgba(3, 7, 18, 0.95) 0%, rgba(3, 7, 18, 0.65) 65%, transparent 100%);
+      padding: 28px 18px 14px;
+      opacity: 0; visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .player-wrapper.show-controls .controls-overlay {
+      opacity: 1; visibility: visible;
+    }
+
+    .timeline-row {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
+    }
+    .seek-slider {
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 6px; border-radius: 99px;
+      background: rgba(255,255,255,0.25); outline: none; cursor: pointer;
+      transition: height 0.15s;
+    }
+    .seek-slider:hover { height: 8px; }
+    .seek-slider::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 15px; height: 15px; border-radius: 50%;
+      background: #38bdf8; cursor: pointer;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.9);
+    }
+    .time-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px; color: #e2e8f0; white-space: nowrap;
+    }
+
+    .controls-buttons {
+      display: flex; justify-content: space-between; align-items: center; gap: 8px;
+    }
+    .ctrl-left, .ctrl-right { display: flex; align-items: center; gap: 8px; }
+    .ctrl-btn {
+      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.1); color: #f8fafc;
+      backdrop-filter: blur(8px);
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 8px 13px; border-radius: 10px; font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .ctrl-btn:hover { background: rgba(255,255,255,0.24); transform: translateY(-1px); }
+    .ctrl-btn.primary { background: var(--gradient); border: none; color: #fff; }
+    .ctrl-btn.primary:hover { box-shadow: 0 4px 14px var(--primary-glow); }
+
+    /* Action Bar Below Player (Like Button & Meta) */
+    .player-meta-bar {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border);
+      flex-wrap: wrap; gap: 10px;
+    }
+    .like-btn {
+      background: var(--surface-solid); border: 1px solid var(--border); color: var(--text);
+      padding: 9px 18px; border-radius: 99px; font-size: 13px; font-weight: 700;
+      display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.25s;
+    }
+    .like-btn:hover { border-color: var(--primary); transform: translateY(-1px); }
+    .like-btn.liked {
+      background: rgba(59, 130, 246, 0.16); border-color: var(--primary); color: #38bdf8;
+      box-shadow: 0 4px 15px var(--primary-glow);
+    }
+
+    .desc-box {
+      margin-top: 16px; padding: 18px;
+      background: var(--surface-solid); border: 1px solid var(--border);
+      border-radius: 14px; font-size: 14px; color: var(--text);
+      white-space: pre-wrap; word-break: break-word; user-select: text;
+      display: none; line-height: 1.65;
+    }
+    .desc-box a { color: #38bdf8; text-decoration: underline; font-weight: 600; }
+
+    /* Video Grid & Interactive 3D Cards */
+    .grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 24px;
+    }
+    .card {
+      background: var(--surface);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 20px; overflow: hidden;
+      display: flex; flex-direction: column; justify-content: space-between;
+      transition: all 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+      box-shadow: var(--card-shadow); cursor: pointer;
+      position: relative;
+    }
+    .card:hover {
+      transform: translateY(-7px);
+      border-color: var(--border-highlight);
+      box-shadow: 0 22px 45px -12px rgba(0, 0, 0, 0.65), 0 0 25px var(--primary-glow);
+    }
+    .thumb-box {
+      position: relative; width: 100%; padding-bottom: 56.25%;
+      background: #090d16; overflow: hidden;
+    }
+    .thumb-box img {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .card:hover .thumb-box img { transform: scale(1.07); }
+    .play-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(5, 8, 17, 0.75) 0%, rgba(5, 8, 17, 0.2) 55%, rgba(5, 8, 17, 0.25) 100%);
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.3s;
+    }
+    .card:hover .play-overlay {
+      background: linear-gradient(to top, rgba(5, 8, 17, 0.82) 0%, rgba(37, 99, 235, 0.22) 100%);
+    }
+    .play-circle {
+      width: 54px; height: 54px; border-radius: 50%;
+      background: var(--gradient); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.65);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .card:hover .play-circle { transform: scale(1.14); }
+
+    .card-badge {
+      position: absolute; top: 12px; left: 12px; z-index: 2;
+      font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px;
+      padding: 5px 11px; border-radius: 99px; backdrop-filter: blur(8px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .watched-badge {
+      position: absolute; top: 12px; right: 12px; z-index: 2;
+      font-size: 11px; font-weight: 700;
+      background: rgba(15, 23, 42, 0.88); color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      padding: 4px 10px; border-radius: 99px;
+      display: inline-flex; align-items: center; gap: 4px;
+      backdrop-filter: blur(8px);
+    }
+    .date-badge {
+      position: absolute; bottom: 12px; right: 12px; z-index: 2;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; font-weight: 600;
+      background: rgba(5, 8, 17, 0.82); color: #f8fafc;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 4px 9px; border-radius: 8px;
+      backdrop-filter: blur(6px);
+    }
+    .tag-free { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
+    .tag-paid { background: var(--gradient); color: #fff; }
+
+    .card-body {
+      padding: 20px; display: flex; flex-direction: column; gap: 12px;
+      flex: 1; justify-content: space-between;
+    }
+    .card h4 {
+      font-size: 16.5px; font-weight: 700; line-height: 1.42;
+      letter-spacing: -0.2px; transition: color 0.2s;
+    }
+    .card:hover h4 { color: #38bdf8; }
+    :root[data-theme="light"] .card:hover h4 { color: var(--primary); }
+    .card-desc-preview {
+      font-size: 13px; color: var(--text-muted); margin-top: 6px;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .card-footer-meta {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 12px; font-weight: 600; color: var(--text-muted);
+      padding-top: 10px; border-top: 1px solid var(--border); margin-bottom: 4px;
+    }
+
+    /* Pagination */
+    .pagination {
+      display: flex; justify-content: center; align-items: center; gap: 8px;
+      margin-top: 34px; flex-wrap: wrap;
+    }
+    .page-btn {
+      background: var(--surface); border: 1px solid var(--border); color: var(--text);
+      padding: 9px 16px; border-radius: 12px; font-size: 13px; font-weight: 700;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .page-btn:hover:not(:disabled) { border-color: var(--primary); transform: translateY(-2px); }
+    .page-btn.active {
+      background: var(--gradient); border-color: transparent; color: #fff;
+      box-shadow: 0 6px 16px var(--primary-glow);
+    }
+    .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Buttons & Inputs */
+    .btn {
+      width: 100%; padding: 12px 18px; border-radius: 12px; border: none;
+      background: var(--gradient); color: #fff; font-weight: 700; font-size: 13.5px;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      cursor: pointer; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 15px var(--primary-glow);
+    }
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 22px var(--primary-glow);
+      filter: brightness(1.06);
+    }
+    .btn-outline {
+      background: var(--surface-solid); border: 1px solid var(--border); color: var(--text);
+      box-shadow: none;
+    }
+    .btn-outline:hover {
+      border-color: var(--primary); background: var(--surface-hover);
+      box-shadow: 0 4px 12px var(--primary-glow);
+    }
+    .btn-danger {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      box-shadow: 0 4px 15px rgba(239, 68, 68, 0.35);
+    }
+
+    .pass-wrap { position: relative; display: flex; align-items: center; }
+    .pass-wrap input { padding-right: 44px; }
+    .eye-btn {
+      position: absolute; right: 12px; background: transparent; border: none;
+      color: var(--text-muted); cursor: pointer; display: flex; align-items: center; padding: 4px;
+    }
+    .eye-btn:hover { color: var(--primary); }
+
+    /* Glassmorphic Modals */
+    .modal-backdrop {
+      position: fixed; inset: 0; z-index: 60;
+      background: rgba(3, 6, 14, 0.78); backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal {
+      background: var(--surface-solid);
+      border: 1px solid var(--border-highlight);
+      border-radius: 24px; width: 100%; max-width: 410px; padding: 28px;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 30px var(--primary-glow);
+      position: relative; animation: popIn 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.92) translateY(8px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .modal-close {
+      position: absolute; top: 18px; right: 18px;
+      background: rgba(148, 163, 184, 0.1); border: none; color: var(--text-muted);
+      width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: 0.2s;
+    }
+    .modal-close:hover { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+    .input-group { margin: 16px 0; }
+    .input-group label {
+      display: block; font-size: 12px; font-weight: 700; color: var(--text-muted);
+      margin-bottom: 7px; letter-spacing: 0.2px;
+    }
+    input[type="email"], input[type="password"], input[type="text"] {
+      width: 100%; padding: 12px 15px; border-radius: 12px;
+      border: 1px solid var(--border); background: var(--bg); color: var(--text);
+      font-size: 14px; outline: none; transition: all 0.2s;
+    }
+    input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+
+    .avatar-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; margin: 18px 0; }
+    .avatar-large {
+      width: 90px; height: 90px; border-radius: 26px;
+      background: var(--bg); border: 2px solid var(--primary);
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+      box-shadow: 0 10px 25px var(--primary-glow);
+    }
+    .avatar-large img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* Floating WhatsApp Support Button */
+    .wa-float {
+      position: fixed; bottom: 24px; right: 24px; z-index: 45;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #fff;
+      padding: 13px 20px; border-radius: 99px;
+      display: flex; align-items: center; gap: 9px;
+      font-size: 13.5px; font-weight: 700; text-decoration: none;
+      box-shadow: 0 10px 28px rgba(16, 185, 129, 0.45);
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .wa-float:hover {
+      transform: translateY(-4px) scale(1.03);
+      box-shadow: 0 14px 32px rgba(16, 185, 129, 0.6);
+    }
+
+    /* Footer */
+    .footer {
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      backdrop-filter: blur(14px);
+      padding: 24px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 50px;
+    }
+    .footer a { color: #38bdf8; text-decoration: none; font-weight: 700; }
+    :root[data-theme="light"] .footer a { color: var(--primary); }
+    .footer a:hover { text-decoration: underline; }
   </style>
 </head>
 <body oncontextmenu="return false;">
 
-  <!-- Login Box -->
-  <div id="loginBox" class="box">
-    <h2>🎓 Student Login</h2>
-    <input type="email" id="email" placeholder="Enter your Gmail">
-    <input type="password" id="password" placeholder="Enter Password">
-    <button onclick="login()">Login</button>
-    <p style="font-size: 12px; color: #94a3b8;">Password අමතක නම් Admin සම්බන්ධ කරගන්න.</p>
+  <!-- Full-Screen ICT Loading Screen -->
+  <div id="ictPreloader">
+    <div class="ict-core">
+      <div class="ict-ring-outer"></div>
+      <div class="ict-ring-inner"></div>
+      <span class="ict-binary-tag" id="binaryAnim">0101</span>
+    </div>
+    <div class="ict-load-title">ICT with Chanuka</div>
+    <div class="ict-load-sub">INITIALIZING LEARNING PORTAL...</div>
   </div>
 
-  <!-- Force Password Change Box -->
-  <div id="changePassBox" class="box" style="display:none;">
-    <h2>🔐 Change Temporary Password</h2>
-    <p style="font-size: 13px; color: #cbd5e1;">ආරක්ෂාව සඳහා කරුණාකර අලුත් Password එකක් ලබා දෙන්න.</p>
-    <input type="password" id="newPass" placeholder="New Password (Min 6 chars)">
-    <button onclick="updateFirstPassword()">Save New Password</button>
+  <!-- Top Navigation Bar -->
+  <nav class="navbar">
+    <div class="brand">
+      <img src="logo.png" alt="Logo" class="brand-logo" onerror="this.style.display='none'">
+      <span>ICT with Chanuka</span>
+    </div>
+    <div class="nav-actions">
+      <button class="icon-btn" onclick="toggleTheme()" title="Switch Theme" id="themeBtn"></button>
+      <button class="icon-btn" onclick="openProfileOrLogin()" title="Student Profile" id="navProfileBtn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+      </button>
+    </div>
+  </nav>
+
+  <div class="container">
+
+    <!-- Hero Banner -->
+    <div class="hero">
+      <div class="hero-left">
+        <div class="hero-avatar" id="heroAvatarBox">
+          <img src="logo.png" alt="ICT with Chanuka" onerror="this.style.display='none'">
+        </div>
+        <div>
+          <div class="badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <span id="heroStatusText">ICT with Chanuka — Learning Portal</span>
+          </div>
+          <h1 id="heroTitle">ICT with Chanuka</h1>
+          <p id="heroSub">Explore free ICT lessons or switch to your Enrolled Class tab after signing in.</p>
+        </div>
+      </div>
+      <div id="heroActionBox">
+        <button class="btn" onclick="openModal('loginModal')" style="width:auto; padding: 13px 26px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+          Student Login
+        </button>
+      </div>
+    </div>
+
+    <!-- YouTube-Style Interactive Cinema Player -->
+    <div id="playerSection" class="player-section">
+      <div class="player-header">
+        <div>
+          <span class="player-title" id="nowPlayingTitle">Now Playing</span>
+          <div id="nowPlayingDate" style="font-size:12px; color:var(--text-muted); margin-top:2px;"></div>
+        </div>
+        <button class="close-player" onclick="closePlayer()">Close Player</button>
+      </div>
+
+      <div id="playerWrapper" class="player-wrapper show-controls" onmousemove="revealControls()" ontouchstart="revealControls()">
+        <div id="ytPlayer"></div>
+        <div class="shield" onclick="handleShieldTap()"></div>
+        <div id="watermark" class="watermark">ICT WITH CHANUKA</div>
+
+        <div class="controls-overlay" onclick="event.stopPropagation()">
+          <!-- Timeline Seek Bar -->
+          <div class="timeline-row">
+            <span class="time-text" id="currTimeText">00:00</span>
+            <input type="range" id="seekSlider" class="seek-slider" min="0" max="100" value="0" step="0.1" oninput="onSeekInput(this.value)" onchange="onSeekCommit(this.value)">
+            <span class="time-text" id="durTimeText">00:00</span>
+          </div>
+
+          <!-- Single Play/Pause + Skip + Playback Speed + Fullscreen -->
+          <div class="controls-buttons">
+            <div class="ctrl-left">
+              <button class="ctrl-btn primary" id="playPauseBtn" onclick="togglePlayPause()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <span>Play</span>
+              </button>
+              <button class="ctrl-btn" onclick="seekBy(-10)">-10s</button>
+              <button class="ctrl-btn" onclick="seekBy(10)">+10s</button>
+            </div>
+            <div class="ctrl-right">
+              <button class="ctrl-btn" id="speedBtn" onclick="cyclePlaybackSpeed()" title="Playback Speed">1x</button>
+              <button class="ctrl-btn" onclick="toggleFull()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+                <span>Full</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Like Button & Meta Bar -->
+      <div class="player-meta-bar">
+        <button class="like-btn" id="likeVideoBtn" onclick="toggleVideoLike()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
+          <span id="likeBtnLabel">Like</span>
+          <span id="likeCountBadge" style="opacity:0.8;">(0)</span>
+        </button>
+        <span style="font-size:12px; color:var(--text-muted);">Protected Stream &bull; ICT with Chanuka</span>
+      </div>
+
+      <div id="videoDescBox" class="desc-box"></div>
+    </div>
+
+    <!-- Separate Tabs -->
+    <div class="tabs-bar">
+      <button class="tab-btn active" id="tabFree" onclick="switchTab('free')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+        Free Public Lessons
+      </button>
+      <button class="tab-btn" id="tabEnrolled" onclick="switchTab('enrolled')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        My Enrolled Class
+      </button>
+    </div>
+
+    <!-- Search & Date Filter -->
+    <div class="filter-bar">
+      <input type="text" id="searchVideoInput" placeholder="Search recordings by lesson title..." oninput="applyFilters()">
+      <input type="date" id="filterDateInput" onchange="applyFilters()" title="Filter by Class Date">
+      <button class="btn btn-outline" style="width:auto; padding:10px 20px;" onclick="resetFilters()">Clear</button>
+    </div>
+
+    <!-- Video Cards Container & Pagination -->
+    <div id="videoGrid" class="grid"></div>
+    <div id="paginationBox" class="pagination"></div>
+
   </div>
 
-  <!-- Student Dashboard -->
-  <div id="dashboard" class="dashboard">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <div>
-        <h2 id="welcomeText" style="margin:0;">Welcome</h2>
-        <span id="studentMeta" style="color:#38bdf8; font-size:14px;"></span>
-      </div>
-      <button onclick="logout()" style="width:auto; background:#dc2626;">Logout</button>
-    </div>
+  <!-- Floating WhatsApp Help Button -->
+  <a id="waSupportBtn" href="https://wa.me/" target="_blank" class="wa-float" style="display:none;">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+    <span>Help &amp; Support</span>
+  </a>
 
-    <!-- Protected Video Player -->
-    <div id="playerWrapper" class="player-wrapper">
-      <div id="ytPlayer"></div>
-      <div class="shield"></div>
-      <div id="watermark" class="watermark">ID: LOADING</div>
-      <div class="controls">
-        <button onclick="playVid()">▶ Play</button>
-        <button onclick="pauseVid()">⏸ Pause</button>
-        <button onclick="seek(-10)">⏪ -10s</button>
-        <button onclick="seek(10)">⏩ +10s</button>
-        <button onclick="toggleFull()">⛶ Fullscreen</button>
-      </div>
-    </div>
+  <!-- Footer -->
+  <footer class="footer">
+    <div>&copy; <span id="year"></span> <strong>ICT with Chanuka</strong>. All Rights Reserved.</div>
+    <div style="margin-top:4px;">System Developed &amp; Powered by <strong>Roxy Official</strong> &bull; Contact: <a href="mailto:roxyofficial.info@gmail.com">roxyofficial.info@gmail.com</a></div>
+  </footer>
 
-    <h3>📚 Your Available Recordings</h3>
-    <div id="recList">Loading recordings...</div>
+  <!-- Custom Theme Popup Alert Modal -->
+  <div id="customAlertModal" class="modal-backdrop" style="z-index: 90;">
+    <div class="modal" style="text-align:center;">
+      <h3 id="alertTitle" style="margin-bottom:8px; color:var(--primary);">Notice</h3>
+      <p id="alertMsg" style="font-size:14px; color:var(--text); margin-bottom:20px;"></p>
+      <button class="btn" onclick="closeModal('customAlertModal')">OK</button>
+    </div>
+  </div>
+
+  <!-- Login Modal -->
+  <div id="loginModal" class="modal-backdrop">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal('loginModal')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+      <h3 style="margin-bottom:4px;">ICT with Chanuka — Login</h3>
+      <p style="font-size:13px; color:var(--text-muted);">Sign in to access your enrolled class recordings.</p>
+      <div class="input-group">
+        <label>Email Address</label>
+        <input type="email" id="email" placeholder="student@gmail.com">
+      </div>
+      <div class="input-group">
+        <label>Password</label>
+        <div class="pass-wrap">
+          <input type="password" id="password" placeholder="Enter your password">
+          <button type="button" class="eye-btn" onclick="togglePassView('password', this)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          </button>
+        </div>
+      </div>
+      <button class="btn" onclick="login()">Sign In</button>
+    </div>
+  </div>
+
+  <!-- Force First-Time Password Change Modal -->
+  <div id="forcePassModal" class="modal-backdrop">
+    <div class="modal">
+      <h3 style="margin-bottom:4px;">Set New Password</h3>
+      <p style="font-size:13px; color:var(--text-muted);">Please replace your temporary password before continuing.</p>
+      <div class="input-group">
+        <label>New Password (Minimum 6 characters)</label>
+        <div class="pass-wrap">
+          <input type="password" id="firstNewPass" placeholder="Enter new password">
+          <button type="button" class="eye-btn" onclick="togglePassView('firstNewPass', this)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          </button>
+        </div>
+      </div>
+      <button class="btn" onclick="updateFirstPassword()">Save Password</button>
+    </div>
+  </div>
+
+  <!-- Profile Modal -->
+  <div id="profileModal" class="modal-backdrop">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal('profileModal')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+      <h3>Student Profile</h3>
+
+      <div class="avatar-wrap">
+        <div class="avatar-large" id="modalAvatarBox">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        </div>
+        <label class="btn btn-outline" style="width:auto; padding:7px 16px; font-size:12px; cursor:pointer;">
+          Upload Profile Photo
+          <input type="file" id="avatarInput" accept="image/*" style="display:none;" onchange="uploadProfilePic(event)">
+        </label>
+      </div>
+
+      <div style="background:var(--bg); padding:14px; border-radius:14px; font-size:13px; margin-bottom:16px; border:1px solid var(--border);">
+        <div><strong>Name:</strong> <span id="profName">-</span></div>
+        <div style="margin-top:4px;"><strong>Clz ID:</strong> <span id="profId">-</span></div>
+        <div style="margin-top:4px;"><strong>Class:</strong> <span id="profClass">-</span></div>
+      </div>
+
+      <div class="input-group">
+        <label>Change Password</label>
+        <div class="pass-wrap">
+          <input type="password" id="profileNewPass" placeholder="New password (min 6 chars)">
+          <button type="button" class="eye-btn" onclick="togglePassView('profileNewPass', this)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          </button>
+        </div>
+      </div>
+      <button class="btn" onclick="changeProfilePassword()" style="margin-bottom:10px;">Update Password</button>
+      <button class="btn btn-danger" onclick="logout()">Sign Out</button>
+    </div>
   </div>
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script type="module">
   import { auth, db } from './firebase-config.js';
   import { signInWithEmailAndPassword, updatePassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-  import { doc, getDoc, updateDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { doc, getDoc, updateDoc, collection, getDocs, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  document.getElementById('year').innerText = new Date().getFullYear();
+
+  const binarySamples = ["0101", "1010", "1100", "0011", "1001", "0110"];
+  let bIdx = 0;
+  const binaryTimer = setInterval(() => {
+    const el = document.getElementById('binaryAnim');
+    if (el) el.innerText = binarySamples[bIdx++ % binarySamples.length];
+  }, 220);
+
+  function hidePreloader() {
+    clearInterval(binaryTimer);
+    const loader = document.getElementById('ictPreloader');
+    if (loader) loader.classList.add('hidden');
+  }
 
   let currentStudent = null;
   let player = null;
+  let wmInterval = null;
+  let timelineInterval = null;
+  let hideCtrlTimeout = null;
+  let isSeeking = false;
+  let activeRecordingId = null;
 
+  const SPEEDS = [1, 1.25, 1.5, 2];
+  let currentSpeedIdx = 0;
+
+  let allRecordings = [];
+  let activeTab = 'free';
+  let currentPage = 1;
+  const ITEMS_PER_PAGE = 6;
+
+  window.showNotice = (msg, title = "ICT with Chanuka") => {
+    document.getElementById('alertTitle').innerText = title;
+    document.getElementById('alertMsg').innerText = msg;
+    openModal('customAlertModal');
+  };
+
+  window.togglePassView = (inputId, btn) => {
+    const inp = document.getElementById(inputId);
+    const isPass = inp.type === 'password';
+    inp.type = isPass ? 'text' : 'password';
+    btn.style.color = isPass ? 'var(--primary)' : 'var(--text-muted)';
+  };
+
+  // Theme Setup
+  const savedTheme = localStorage.getItem('lms_theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  updateThemeIcon(savedTheme);
+
+  window.toggleTheme = () => {
+    const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('lms_theme', next);
+    updateThemeIcon(next);
+  };
+
+  function updateThemeIcon(theme) {
+    document.getElementById('themeBtn').innerHTML = theme === 'dark'
+      ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`
+      : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`;
+  }
+
+  window.openModal = (id) => document.getElementById(id).style.display = 'flex';
+  window.closeModal = (id) => document.getElementById(id).style.display = 'none';
+  window.openProfileOrLogin = () => currentStudent ? openModal('profileModal') : openModal('loginModal');
+
+  let recordingsLoaded = false;
+  let authChecked = false;
+  function checkAllReady() {
+    if (recordingsLoaded && authChecked) {
+      setTimeout(hidePreloader, 350);
+    }
+  }
+
+  async function loadSupportSettings() {
+    try {
+      const snap = await getDoc(doc(db, "settings", "general"));
+      if (snap.exists() && snap.data().whatsapp) {
+        let phone = snap.data().whatsapp.replace(/\D/g, '');
+        if (phone.startsWith('0')) phone = '94' + phone.substring(1);
+        const btn = document.getElementById('waSupportBtn');
+        btn.href = `https://wa.me/${phone}?text=${encodeURIComponent("Hello ICT with Chanuka Support, I need assistance with the student portal.")}`;
+        btn.style.display = 'flex';
+      }
+    } catch (e) {}
+  }
+  loadSupportSettings();
+
+  function extractVideoId(input) {
+    if (!input) return "";
+    const str = input.trim();
+    if (/^[a-zA-Z0-9_-]{11}$/.test(str)) return str;
+    try {
+      const url = new URL(str.startsWith('http') ? str : 'https://' + str);
+      if (url.searchParams.has('v')) return url.searchParams.get('v').substring(0, 11);
+      if (url.hostname.includes('youtu.be')) return url.pathname.replace('/', '').split('/')[0].substring(0, 11);
+      const parts = url.pathname.split('/').filter(Boolean);
+      const idx = parts.findIndex(p => ['live', 'shorts', 'embed', 'v'].includes(p));
+      if (idx !== -1 && parts[idx + 1]) return parts[idx + 1].substring(0, 11);
+    } catch (e) {
+      const match = str.match(/(?:v=|\/)([a-zA-Z0-9_-]{11})/);
+      if (match) return match[1];
+    }
+    return str;
+  }
+
+  function linkify(text) {
+    const escaped = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    return escaped.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+  }
+
+  // Watched History Helpers
+  function getWatchedSet() {
+    const key = currentStudent ? `chanuka_watched_${currentStudent.uid}` : 'chanuka_watched_guest';
+    try { return new Set(JSON.parse(localStorage.getItem(key) || '[]')); }
+    catch (e) { return new Set(); }
+  }
+
+  function markRecordingWatched(docId) {
+    const key = currentStudent ? `chanuka_watched_${currentStudent.uid}` : 'chanuka_watched_guest';
+    const set = getWatchedSet();
+    set.add(docId);
+    localStorage.setItem(key, JSON.stringify([...set]));
+    renderVideos();
+  }
+
+  async function fetchAllRecordings() {
+    try {
+      const snap = await getDocs(collection(db, "recordings"));
+      allRecordings = [];
+      snap.forEach(d => allRecordings.push({ id: d.id, ...d.data() }));
+      allRecordings.sort((a, b) => (b.classDate || '').localeCompare(a.classDate || ''));
+    } catch (e) {
+      showNotice("Failed to load recordings. Please refresh.");
+    } finally {
+      recordingsLoaded = true;
+      renderVideos();
+      checkAllReady();
+    }
+  }
+  fetchAllRecordings();
+
+  window.switchTab = (tab) => {
+    if (tab === 'enrolled' && !currentStudent) {
+      openModal('loginModal');
+      return;
+    }
+    activeTab = tab;
+    currentPage = 1;
+    document.getElementById('tabFree').classList.toggle('active', tab === 'free');
+    document.getElementById('tabEnrolled').classList.toggle('active', tab === 'enrolled');
+    renderVideos();
+  };
+
+  window.applyFilters = () => { currentPage = 1; renderVideos(); };
+  window.resetFilters = () => {
+    document.getElementById('searchVideoInput').value = '';
+    document.getElementById('filterDateInput').value = '';
+    currentPage = 1;
+    renderVideos();
+  };
+
+  function renderVideos() {
+    const grid = document.getElementById('videoGrid');
+    const pagBox = document.getElementById('paginationBox');
+
+    // If student is blocked on Enrolled tab
+    if (activeTab === 'enrolled' && currentStudent && currentStudent.isBlocked) {
+      grid.innerHTML = `
+        <div class="blocked-banner">
+          <strong>Access Temporarily Suspended</strong><br>
+          Your enrolled class access has been paused by the administrator. Please contact <strong>ICT with Chanuka Support</strong> via WhatsApp to restore access.
+        </div>`;
+      pagBox.innerHTML = '';
+      return;
+    }
+
+    const searchQ = document.getElementById('searchVideoInput').value.trim().toLowerCase();
+    const dateQ = document.getElementById('filterDateInput').value;
+    const watchedSet = getWatchedSet();
+
+    let list = allRecordings.filter(rec => {
+      if (activeTab === 'free') return !!rec.isFree;
+      return !rec.isFree && currentStudent && rec.allowedIds && rec.allowedIds.includes(currentStudent.clzId);
+    });
+
+    if (searchQ) list = list.filter(rec => rec.title && rec.title.toLowerCase().includes(searchQ));
+    if (dateQ) list = list.filter(rec => rec.classDate === dateQ);
+
+    if (list.length === 0) {
+      grid.innerHTML = `<p style="color:var(--text-muted); font-size:14px; grid-column: 1/-1; text-align:center; padding:30px 0;">No recordings found matching your selection.</p>`;
+      pagBox.innerHTML = '';
+      return;
+    }
+
+    const totalPages = Math.ceil(list.length / ITEMS_PER_PAGE);
+    if (currentPage > totalPages) currentPage = totalPages;
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    const pagedItems = list.slice(start, start + ITEMS_PER_PAGE);
+
+    grid.innerHTML = pagedItems.map(rec => {
+      const vidId = extractVideoId(rec.videoId);
+      const thumbUrl = `https://img.youtube.com/vi/${vidId}/hqdefault.jpg`;
+      const likes = rec.likes || 0;
+      const isWatched = watchedSet.has(rec.id);
+      return `
+        <div class="card" onclick="watchRecording('${rec.id}')">
+          <div class="thumb-box">
+            <img src="${thumbUrl}" alt="${rec.title}" loading="lazy">
+            <span class="card-badge ${rec.isFree ? 'tag-free' : 'tag-paid'}">${rec.isFree ? 'Free Lesson' : 'Enrolled'}</span>
+            ${isWatched ? `<span class="watched-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Watched</span>` : ''}
+            ${rec.classDate ? `<span class="date-badge">${rec.classDate}</span>` : ''}
+            <div class="play-overlay">
+              <div class="play-circle">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div>
+              <h4>${rec.title}</h4>
+              ${rec.description ? `<p class="card-desc-preview">${rec.description}</p>` : ''}
+            </div>
+            <div>
+              <div class="card-footer-meta">
+                <span>${likes} Likes</span>
+                <span>ICT with Chanuka</span>
+              </div>
+              <button class="btn" style="margin-top:8px;">Watch Lesson</button>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+
+    if (totalPages <= 1) {
+      pagBox.innerHTML = '';
+    } else {
+      let btns = `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">Prev</button>`;
+      for (let i = 1; i <= totalPages; i++) {
+        btns += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+      }
+      btns += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">Next</button>`;
+      pagBox.innerHTML = btns;
+    }
+  }
+
+  window.goToPage = (p) => {
+    currentPage = p;
+    renderVideos();
+    document.querySelector('.tabs-bar').scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Auth Handlers
   window.login = async () => {
     const email = document.getElementById('email').value.trim();
     const pass = document.getElementById('password').value;
     try {
       await signInWithEmailAndPassword(auth, email, pass);
+      closeModal('loginModal');
     } catch (e) {
-      alert("Login Failed: Email හෝ Password වැරදියි!");
+      showNotice("Invalid email or password. Please check and try again.", "Login Failed");
     }
   };
 
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
-      document.getElementById('loginBox').style.display = 'block';
-      document.getElementById('dashboard').style.display = 'none';
+      currentStudent = null;
+      document.getElementById('heroStatusText').innerText = "ICT with Chanuka — Learning Portal";
+      document.getElementById('heroTitle').innerText = "ICT with Chanuka";
+      document.getElementById('heroSub').innerText = "Explore free ICT lessons or switch to your Enrolled Class tab after signing in.";
+      document.getElementById('heroActionBox').style.display = 'block';
+      document.getElementById('navProfileBtn').innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+      document.getElementById('heroAvatarBox').innerHTML = `<img src="logo.png" alt="ICT with Chanuka" onerror="this.style.display='none'">`;
+      switchTab('free');
+      authChecked = true;
+      checkAllReady();
       return;
     }
 
     const snap = await getDoc(doc(db, "students", user.uid));
-    if (!snap.exists()) return alert("Student record not found!");
-    currentStudent = { uid: user.uid, ...snap.data() };
-
-    document.getElementById('loginBox').style.display = 'none';
-
-    if (currentStudent.mustChangePass) {
-      document.getElementById('changePassBox').style.display = 'block';
-    } else {
-      showDashboard();
+    if (snap.exists()) {
+      currentStudent = { uid: user.uid, ...snap.data() };
+      if (currentStudent.mustChangePass) {
+        openModal('forcePassModal');
+      } else {
+        loadStudentProfile();
+      }
     }
+    authChecked = true;
+    checkAllReady();
   });
 
   window.updateFirstPassword = async () => {
-    const newPass = document.getElementById('newPass').value;
-    if (newPass.length < 6) return alert("Password එක අකුරු 6කට වඩා වැඩි විය යුතුයි!");
+    const newPass = document.getElementById('firstNewPass').value;
+    if (newPass.length < 6) return showNotice("Password must be at least 6 characters long.");
     try {
       await updatePassword(auth.currentUser, newPass);
-      await updateDoc(doc(db, "students", currentStudent.uid), { mustChangePass: false });
-      document.getElementById('changePassBox').style.display = 'none';
-      showDashboard();
+      await updateDoc(doc(db, "students", currentStudent.uid), { mustChangePass: false, savedPass: newPass });
+      closeModal('forcePassModal');
+      loadStudentProfile();
+      showNotice("Your new password has been saved!");
     } catch (e) {
-      alert("Error: " + e.message);
+      showNotice(e.message, "Error");
     }
   };
 
-  async function showDashboard() {
-    document.getElementById('dashboard').style.display = 'block';
-    document.getElementById('welcomeText').innerText = `👋 ${currentStudent.name}`;
-    document.getElementById('studentMeta').innerText = `Clz ID: ${currentStudent.clzId} | Class: ${currentStudent.class}`;
+  function loadStudentProfile() {
+    document.getElementById('heroStatusText').innerText = `Clz ID: ${currentStudent.clzId} | ${currentStudent.class}`;
+    document.getElementById('heroTitle').innerText = `Welcome, ${currentStudent.name}`;
+    document.getElementById('heroSub').innerText = "Access your private class recordings under the 'My Enrolled Class' tab.";
+    document.getElementById('heroActionBox').style.display = 'none';
 
-    const q = query(collection(db, "recordings"), where("class", "==", currentStudent.class));
-    const snap = await getDocs(q);
-    const list = document.getElementById('recList');
-    list.innerHTML = "";
+    document.getElementById('profName').innerText = currentStudent.name;
+    document.getElementById('profId').innerText = currentStudent.clzId;
+    document.getElementById('profClass').innerText = currentStudent.class;
 
-    let count = 0;
-    snap.forEach(d => {
-      const rec = d.data();
-      if (rec.allowedIds && rec.allowedIds.includes(currentStudent.clzId)) {
-        count++;
-        list.innerHTML += `
-          <div class="rec-card">
-            <div>
-              <strong>${rec.title}</strong><br>
-              <small style="color:#94a3b8;">Class: ${rec.class}</small>
-            </div>
-            <button onclick="watchVideo('${rec.videoId}')" style="width:auto;">▶ Watch Now</button>
-          </div>`;
-      }
-    });
-
-    if (count === 0) list.innerHTML = "<p>ඔබගේ Clz ID එකට දැනට recordings කිසිවක් ලබා දී නොමැත.</p>";
+    if (currentStudent.photoBase64) {
+      applyAvatar(currentStudent.photoBase64);
+    } else {
+      document.getElementById('heroAvatarBox').innerHTML = `<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+    }
+    switchTab('enrolled');
   }
 
-  window.watchVideo = (videoId) => {
-    document.getElementById('playerWrapper').style.display = 'block';
-    const wm = document.getElementById('watermark');
-    wm.innerText = `${currentStudent.clzId} | ${currentStudent.name}`;
+  window.uploadProfilePic = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = async () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 180; canvas.height = 180;
+        canvas.getContext('2d').drawImage(img, 0, 0, 180, 180);
+        const compressed = canvas.toDataURL('image/jpeg', 0.75);
+        await updateDoc(doc(db, "students", currentStudent.uid), { photoBase64: compressed });
+        currentStudent.photoBase64 = compressed;
+        applyAvatar(compressed);
+        showNotice("Profile photo updated successfully!");
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
 
-    // Move Watermark every 4 seconds
-    setInterval(() => {
-      const top = Math.floor(Math.random() * 75) + 10;
-      const left = Math.floor(Math.random() * 70) + 10;
-      wm.style.top = top + "%";
-      wm.style.left = left + "%";
-    }, 4000);
+  function applyAvatar(base64) {
+    document.getElementById('navProfileBtn').innerHTML = `<img src="${base64}" alt="Profile">`;
+    document.getElementById('modalAvatarBox').innerHTML = `<img src="${base64}" alt="Profile">`;
+    document.getElementById('heroAvatarBox').innerHTML = `<img src="${base64}" alt="Profile">`;
+  }
 
-    if (player) {
-      player.loadVideoById(videoId);
-    } else {
-      player = new YT.Player('ytPlayer', {
-        videoId: videoId,
-        playerVars: { 'controls': 0, 'rel': 0, 'modestbranding': 1, 'disablekb': 1 }
-      });
+  window.changeProfilePassword = async () => {
+    const newPass = document.getElementById('profileNewPass').value;
+    if (newPass.length < 6) return showNotice("Password must be at least 6 characters long.");
+    try {
+      await updatePassword(auth.currentUser, newPass);
+      await updateDoc(doc(db, "students", currentStudent.uid), { savedPass: newPass });
+      document.getElementById('profileNewPass').value = "";
+      showNotice("Password updated successfully!");
+    } catch (e) {
+      showNotice("For security, please sign out and sign in again before changing your password.");
     }
   };
 
-  window.playVid = () => player && player.playVideo();
-  window.pauseVid = () => player && player.pauseVideo();
-  window.seek = (sec) => player && player.seekTo(player.getCurrentTime() + sec, true);
+  // --- Interactive Player, Timeline & Speed Control ---
+  function formatTime(sec) {
+    if (!sec || isNaN(sec)) return "00:00";
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
+  function updatePlayPauseUI(isPlaying) {
+    const btn = document.getElementById('playPauseBtn');
+    btn.innerHTML = isPlaying
+      ? `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg><span>Pause</span>`
+      : `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg><span>Play</span>`;
+  }
+
+  window.cyclePlaybackSpeed = () => {
+    currentSpeedIdx = (currentSpeedIdx + 1) % SPEEDS.length;
+    const rate = SPEEDS[currentSpeedIdx];
+    document.getElementById('speedBtn').innerText = `${rate}x`;
+    if (player && typeof player.setPlaybackRate === 'function') {
+      player.setPlaybackRate(rate);
+    }
+    revealControls();
+  };
+
+  window.revealControls = () => {
+    const wrapper = document.getElementById('playerWrapper');
+    wrapper.classList.add('show-controls');
+    if (hideCtrlTimeout) clearTimeout(hideCtrlTimeout);
+    hideCtrlTimeout = setTimeout(() => {
+      if (player && typeof player.getPlayerState === 'function' && player.getPlayerState() === YT.PlayerState.PLAYING) {
+        wrapper.classList.remove('show-controls');
+      }
+    }, 3000);
+  };
+
+  window.handleShieldTap = () => {
+    revealControls();
+    togglePlayPause();
+  };
+
+  window.togglePlayPause = () => {
+    if (!player || typeof player.getPlayerState !== 'function') return;
+    if (player.getPlayerState() === YT.PlayerState.PLAYING) player.pauseVideo();
+    else player.playVideo();
+    revealControls();
+  };
+
+  window.seekBy = (sec) => {
+    if (!player || typeof player.getCurrentTime !== 'function') return;
+    player.seekTo(Math.max(0, player.getCurrentTime() + sec), true);
+    revealControls();
+  };
+
+  window.onSeekInput = (percent) => {
+    isSeeking = true;
+    if (player && typeof player.getDuration === 'function') {
+      document.getElementById('currTimeText').innerText = formatTime((percent / 100) * player.getDuration());
+    }
+    revealControls();
+  };
+
+  window.onSeekCommit = (percent) => {
+    if (player && typeof player.getDuration === 'function') {
+      player.seekTo((percent / 100) * player.getDuration(), true);
+    }
+    isSeeking = false;
+    revealControls();
+  };
+
+  function startTimelineTracker() {
+    if (timelineInterval) clearInterval(timelineInterval);
+    timelineInterval = setInterval(() => {
+      if (!player || typeof player.getCurrentTime !== 'function' || isSeeking) return;
+      const cur = player.getCurrentTime() || 0;
+      const dur = player.getDuration() || 0;
+      document.getElementById('currTimeText').innerText = formatTime(cur);
+      document.getElementById('durTimeText').innerText = formatTime(dur);
+      if (dur > 0) document.getElementById('seekSlider').value = (cur / dur) * 100;
+    }, 500);
+  }
+
+  // Video Like Handler
+  function getLikedSet() {
+    try { return new Set(JSON.parse(localStorage.getItem('chanuka_liked_vids') || '[]')); }
+    catch (e) { return new Set(); }
+  }
+
+  function updateLikeButtonUI(rec) {
+    const likedSet = getLikedSet();
+    const isLiked = likedSet.has(rec.id);
+    const btn = document.getElementById('likeVideoBtn');
+    btn.classList.toggle('liked', isLiked);
+    document.getElementById('likeBtnLabel').innerText = isLiked ? 'Liked' : 'Like';
+    document.getElementById('likeCountBadge').innerText = `(${rec.likes || 0})`;
+  }
+
+  window.toggleVideoLike = async () => {
+    if (!activeRecordingId) return;
+    const rec = allRecordings.find(r => r.id === activeRecordingId);
+    if (!rec) return;
+
+    const likedSet = getLikedSet();
+    const isLiked = likedSet.has(rec.id);
+    const delta = isLiked ? -1 : 1;
+
+    if (isLiked) likedSet.delete(rec.id);
+    else likedSet.add(rec.id);
+
+    localStorage.setItem('chanuka_liked_vids', JSON.stringify([...likedSet]));
+    rec.likes = Math.max(0, (rec.likes || 0) + delta);
+    updateLikeButtonUI(rec);
+    renderVideos();
+
+    try {
+      await updateDoc(doc(db, "recordings", rec.id), { likes: increment(delta) });
+    } catch (e) {}
+  };
+
+  window.watchRecording = (docId) => {
+    const rec = allRecordings.find(r => r.id === docId);
+    if (!rec) return;
+    if (!rec.isFree && currentStudent && currentStudent.isBlocked) {
+      return showNotice("Your enrolled access is currently paused. Please contact support.", "Access Blocked");
+    }
+
+    activeRecordingId = docId;
+    markRecordingWatched(docId);
+
+    const cleanId = extractVideoId(rec.videoId);
+    currentSpeedIdx = 0;
+    document.getElementById('speedBtn').innerText = '1x';
+
+    document.getElementById('playerSection').style.display = 'block';
+    document.getElementById('nowPlayingTitle').innerText = rec.title;
+    document.getElementById('nowPlayingDate').innerText = rec.classDate ? `Class Date: ${rec.classDate}` : '';
+    updateLikeButtonUI(rec);
+
+    const descBox = document.getElementById('videoDescBox');
+    if (rec.description && rec.description.trim() !== "") {
+      descBox.innerHTML = linkify(rec.description);
+      descBox.style.display = 'block';
+    } else {
+      descBox.style.display = 'none';
+    }
+
+    document.getElementById('playerSection').scrollIntoView({ behavior: 'smooth' });
+    revealControls();
+
+    const wm = document.getElementById('watermark');
+    wm.innerText = currentStudent ? `${currentStudent.clzId} | ${currentStudent.name}` : "ICT WITH CHANUKA";
+
+    if (wmInterval) clearInterval(wmInterval);
+    wmInterval = setInterval(() => {
+      wm.style.top = (Math.floor(Math.random() * 68) + 10) + "%";
+      wm.style.left = (Math.floor(Math.random() * 62) + 10) + "%";
+    }, 4000);
+
+    if (player && player.loadVideoById) {
+      player.loadVideoById(cleanId);
+    } else {
+      player = new YT.Player('ytPlayer', {
+        videoId: cleanId,
+        playerVars: { 'controls': 0, 'rel': 0, 'modestbranding': 1, 'disablekb': 1, 'playsinline': 1 },
+        events: {
+          'onReady': (e) => {
+            e.target.playVideo();
+            startTimelineTracker();
+          },
+          'onStateChange': (e) => {
+            const playing = e.data === YT.PlayerState.PLAYING;
+            updatePlayPauseUI(playing);
+            if (!playing) {
+              document.getElementById('playerWrapper').classList.add('show-controls');
+            } else {
+              revealControls();
+            }
+          }
+        }
+      });
+    }
+    startTimelineTracker();
+  };
+
+  window.closePlayer = () => {
+    if (player && player.pauseVideo) player.pauseVideo();
+    if (timelineInterval) clearInterval(timelineInterval);
+    document.getElementById('playerSection').style.display = 'none';
+  };
+
   window.toggleFull = () => {
     const el = document.getElementById('playerWrapper');
     if (!document.fullscreenElement) el.requestFullscreen();
     else document.exitFullscreen();
+    revealControls();
   };
-  window.logout = () => signOut(auth);
+
+  window.logout = async () => {
+    await signOut(auth);
+    closeModal('profileModal');
+    closePlayer();
+  };
 </script>
 </body>
 </html>
